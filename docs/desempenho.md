@@ -22,7 +22,7 @@ Verificar que o fluxo principal funciona sob carga leve e **medir o p95** de `PO
 Como rodar:
 
 ```bash
-cp .env.example && docker compose up -d --build --wait
+cp .env.example .env && docker compose up -d --build --wait
 k6 run --summary-export=k6-summary.json k6/smoke.js
 ```
 
@@ -76,8 +76,7 @@ e publica p95, p99, mediana e taxa de erro no **Job Summary** da execução, al�
 | CI #3 p95 | 5.98 ms |
 | Link da execução | https://github.com/WandersonHonorato/pedidos-api/actions/runs/43831513953 |
 
-
-## Conclusãogit add .
+## Conclusão
 
 - **SLO atendido** com folga de ~54×: p95 = 5,53 ms contra meta de 300 ms, e 0 % de erro.
 - O p99 (15 ms) e o máximo (28 ms) mostram cauda curta; os picos coincidem com o *warm-up* do pool de conexões do Postgres.
