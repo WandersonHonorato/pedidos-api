@@ -34,13 +34,10 @@ API de **domínio único (pedidos)** com **um fluxo principal ponta a ponta**:
 ### Como subir (1 comando)
 
 ```bash
-cp .env.example .env && docker compose up --build
+cp .env && docker compose up --build
 ```
 
-O `.env` é criado a partir do exemplo e **não vai para o Git**. Se ele faltar, o compose para com a mensagem
-`defina POSTGRES_USER no .env (cp .env.example .env)`.
-
-A API fica disponível em `http://localhost:3000` (porta configurável por `API_PORT` no `.env`).
+A API fica disponível em `http://localhost:3000`.
 Para subir em segundo plano e esperar ficar saudável: `docker compose up -d --build --wait`.
 
 ### Testar o fluxo principal na mão
@@ -48,7 +45,7 @@ Para subir em segundo plano e esperar ficar saudável: `docker compose up -d --b
 ```bash
 # 1) criar
 curl -s -X POST localhost:3000/pedidos -H 'Content-Type: application/json' \
-  -d '{"cliente":"Carla","itens":[{"produto":"Teclado","quantidade":1,"precoUnitarioCentavos":19900}]}'
+  -d '{"cliente":"Wanderson","itens":[{"produto":"Hedset JBL","quantidade":1,"precoUnitarioCentavos":19900}]}'
 
 # 2) consultar (troque <ID> pelo id retornado)
 curl -s localhost:3000/pedidos/<ID>
@@ -71,7 +68,7 @@ Contrato completo: [`docs/openapi.yaml`](docs/openapi.yaml) (abra no [Swagger Ed
 
 ```bash
 npm ci
-cp .env.example .env      # REPOSITORY=memory: não precisa de banco
+cp .env      # REPOSITORY=memory: não precisa de banco
 npm start
 ```
 
@@ -116,9 +113,9 @@ pelo job `compose-smoke` da CI, que sobe o compose com Postgres e roda o k6 cont
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml), em todo push e PR:
 
 1. **quality**: `npm ci` → `npm run lint` → `npm run lint:openapi` → `npm run test:coverage`
-2. **compose-smoke**: `cp .env.example .env` → `docker compose up -d --build --wait` → `k6 run` (thresholds = SLO) → p95 publicado no *Job Summary*
+2. **compose-smoke**: `cp .env` → `docker compose up -d --build --wait` → `k6 run` (thresholds = SLO) → p95 publicado no *Job Summary*
 
-Link da última execução verde: **https://github.com/WandersonHonorato/pedidos-api/actions/runs/43805878882**
+Link da última execução verde: **https://github.com/WandersonHonorato/pedidos-api/actions/runs/43821969838**
 
 ## Arquitetura
 

@@ -7,7 +7,7 @@ import { criarLogger } from '../../src/observability/logger.js';
 import { criarMetricas } from '../../src/observability/metrics.js';
 
 /**
- * Teste de integração: HTTP real (Supertest) → Express → Service → Domínio → Repository.
+ * Teste de integração: HTTP (Supertest) → Express → Service → Domínio → Repository.
  * Só o banco é trocado pela implementação em memória (graças ao Repository pattern).
  */
 function montarApp(repo = new InMemoryPedidoRepository()) {
