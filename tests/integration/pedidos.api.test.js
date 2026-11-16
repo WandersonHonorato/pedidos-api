@@ -77,6 +77,13 @@ describe('API /pedidos — fluxo principal ponta a ponta', () => {
     expect(res.body.erro).toBe('status inválido: XPTO');
   });
 
+  it('GET / serve o painel HTML com Bootstrap', async () => {
+    const res = await request(app).get('/').expect(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/);
+    expect(res.text).toContain('Painel de Pedidos');
+    expect(res.text).toContain('bootstrap');
+  });
+
   it('400 para pedido inválido', async () => {
     const res = await request(app).post('/pedidos').send({ cliente: 'Carla', itens: [] }).expect(400);
     expect(res.body.erro).toBe('pedido precisa ter ao menos 1 item');
