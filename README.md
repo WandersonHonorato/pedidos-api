@@ -34,7 +34,7 @@ API de **domínio único (pedidos)** com **um fluxo principal ponta a ponta**:
 ### Como subir (1 comando)
 
 ```bash
-cp .env && docker compose up --build
+cp .env.example && docker compose up --build
 ```
 
 A API fica disponível em `http://localhost:3000`.
@@ -68,7 +68,7 @@ Contrato completo: [`docs/openapi.yaml`](docs/openapi.yaml) (abra no [Swagger Ed
 
 ```bash
 npm ci
-cp .env      # REPOSITORY=memory: não precisa de banco
+cp .env.example      # REPOSITORY=memory: não precisa de banco
 npm start
 ```
 
@@ -115,7 +115,7 @@ pelo job `compose-smoke` da CI, que sobe o compose com Postgres e roda o k6 cont
 1. **quality**: `npm ci` → `npm run lint` → `npm run lint:openapi` → `npm run test:coverage`
 2. **compose-smoke**: `cp .env` → `docker compose up -d --build --wait` → `k6 run` (thresholds = SLO) → p95 publicado no *Job Summary*
 
-Link da última execução verde: **https://github.com/WandersonHonorato/pedidos-api/actions/runs/43821969838**
+Link da última execução verde: **https://github.com/WandersonHonorato/pedidos-api/actions/runs/43831513953**
 
 ## Arquitetura
 

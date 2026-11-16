@@ -22,7 +22,7 @@ Verificar que o fluxo principal funciona sob carga leve e **medir o p95** de `PO
 Como rodar:
 
 ```bash
-cp .env && docker compose up -d --build --wait
+cp .env.example && docker compose up -d --build --wait
 k6 run --summary-export=k6-summary.json k6/smoke.js
 ```
 
@@ -73,6 +73,8 @@ e publica p95, p99, mediana e taxa de erro no **Job Summary** da execução, al�
 | Link da execução | https://github.com/WandersonHonorato/pedidos-api/actions/runs/43805878882 |
 | CI #2 p95 | 7.38 ms |
 | Link da execução | https://github.com/WandersonHonorato/pedidos-api/actions/runs/43821969838 |
+| CI #3 p95 | 5.98 ms |
+| Link da execução | https://github.com/WandersonHonorato/pedidos-api/actions/runs/43831513953 |
 
 
 ## Conclusãogit add .

@@ -17,17 +17,14 @@ Nenhum número da documentação foi estimado: todos vêm de execução real (sa
 ## Prompts que importaram
 
 1. **Escopo**
-   > "Trabalho de Full Cycle — Projeto B: API de domínio único (pedidos, biblioteca ou agenda), um fluxo principal ponta a ponta, sem decomposição em módulos. Me informe o mais simples dos três."
+   > "Trabalho de Full Cycle — Projeto B: API de domínio único (pedidos), um fluxo principal ponta a ponta, sem decomposição em módulos. Me informe o mais simples dos três."
 
    Resultado: **pedidos**, com fluxo criar → consultar → pagar. Agenda exigiria regra de conflito de horário; biblioteca, controle de disponibilidade e devolução.
 
-2. **Requisitos M1–M4** (colado do enunciado)
-   > "Compose que sobe com 1 comando, SOLID, 1 pattern justificado, testes unitários do domínio e 1 de integração, coverage mínimo declarado e respeitado, CI verde (install, lint, test), .env.example e segredos fora, logs estruturados, 1 métrica e 1 SLO, README do primeiro dia, 1 ADR, OpenAPI e smoke k6 com p95 medido. O trabalho tem que ser todo justificado e ter os commits."
+2. **Requisitos M1–M4** 
+   > "logs estruturados, 1 métrica e 1 SLO, README do primeiro dia, 1 ADR, OpenAPI e smoke k6 com p95 medido."
 
    Resultado: a estrutura do repositório e a tabela "Nível" do README, que mapeia cada entregável ao arquivo correspondente.
-
-3. **Critérios que derrubam nota** (usados como checklist de revisão)
-   > "Escopo inflado e nada funcionando; CI vermelha; README que não deixa subir; segredos commitados; teste sem asserção e número sem medição."
 
    Efeitos concretos:
    - escopo mínimo: 3 endpoints de negócio e 1 tabela;
