@@ -2,7 +2,8 @@ import { ValidationError, InvalidStateError } from './errors.js';
 
 export const STATUS = Object.freeze({
   CRIADO: 'CRIADO',
-  PAGO: 'PAGO',
+  PAGO: 'PAGO', // na tela: "Em preparação"
+  FINALIZADO: 'FINALIZADO',
   CANCELADO: 'CANCELADO',
 });
 
@@ -11,7 +12,8 @@ export const STATUS = Object.freeze({
  * - precisa ter ao menos 1 item;
  * - quantidade inteira > 0 e preço > 0;
  * - total é calculado (nunca recebido do cliente), em centavos para evitar erro de float;
- * - só é possível pagar um pedido CRIADO.
+ * - ciclo de vida: CRIADO -> PAGO (em preparação) -> FINALIZADO;
+ * - só é possível pagar um pedido CRIADO e finalizar um pedido PAGO.
  */
 export class Pedido {
   constructor({ id, cliente, itens, status = STATUS.CRIADO, criadoEm = new Date() }) {
@@ -38,6 +40,13 @@ export class Pedido {
       throw new InvalidStateError(`Pedido ${this.id} não pode ser pago no status ${this.status}`);
     }
     this.status = STATUS.PAGO;
+  }
+
+  finalizar() {
+    if (this.status !== STATUS.PAGO) {
+      throw new InvalidStateError(`Pedido ${this.id} não pode ser finalizado no status ${this.status}`);
+    }
+    this.status = STATUS.FINALIZADO;
   }
 
   toJSON() {

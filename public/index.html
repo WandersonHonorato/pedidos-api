@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Painel de Pedidos</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css"
+      integrity="sha384-yEPZ7jP9S0QKiUQ0m3jjsO4ProIW7wvR9gXkI7JOGa2XVsw53Yke2bsdkBbjmmiX"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body class="bg-body-tertiary">
+    <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+      <div class="container-fluid px-4">
+        <span class="navbar-brand fw-semibold">Painel de Pedidos</span>
+        <span class="navbar-text small" id="atualizado-em" aria-live="polite">Carregando…</span>
+      </div>
+    </nav>
+
+    <main class="container-fluid px-4 py-4">
+      <div id="alertas" aria-live="assertive"></div>
+
+      <section class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h2 class="h6 card-title mb-3">Novo pedido</h2>
+          <form id="form-pedido" class="row g-2 align-items-end" novalidate>
+            <div class="col-12 col-md-3">
+              <label for="cliente" class="form-label small mb-1">Cliente</label>
+              <input id="cliente" name="cliente" class="form-control" required maxlength="100" placeholder="Ex.: Carla" />
+            </div>
+            <div class="col-12 col-md-3">
+              <label for="produto" class="form-label small mb-1">Produto</label>
+              <input id="produto" name="produto" class="form-control" required maxlength="100" placeholder="Ex.: Teclado" />
+            </div>
+            <div class="col-6 col-md-2">
+              <label for="quantidade" class="form-label small mb-1">Quantidade</label>
+              <input id="quantidade" name="quantidade" type="number" class="form-control" required min="1" step="1" value="1" />
+            </div>
+            <div class="col-6 col-md-2">
+              <label for="preco" class="form-label small mb-1">Preço unitário (R$)</label>
+              <input id="preco" name="preco" type="number" class="form-control" required min="0.01" step="0.01" placeholder="199,00" />
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+              <button type="submit" class="btn btn-primary">Criar pedido</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <div class="row g-4">
+        <section class="col-12 col-lg-4">
+          <div class="card shadow-sm h-100 topo-CRIADO">
+            <div class="card-header bg-body d-flex justify-content-between align-items-center">
+              <h2 class="h6 mb-0">Criados <span class="text-body-secondary fw-normal small">· aguardando pagamento</span></h2>
+              <span class="badge text-bg-secondary rounded-pill" id="contador-CRIADO">0</span>
+            </div>
+            <div class="card-body coluna" id="coluna-CRIADO"></div>
+          </div>
+        </section>
+
+        <section class="col-12 col-lg-4">
+          <div class="card shadow-sm h-100 topo-PAGO">
+            <div class="card-header bg-body d-flex justify-content-between align-items-center">
+              <h2 class="h6 mb-0">Em preparação <span class="text-body-secondary fw-normal small">· pagos</span></h2>
+              <span class="badge text-bg-warning rounded-pill" id="contador-PAGO">0</span>
+            </div>
+            <div class="card-body coluna" id="coluna-PAGO"></div>
+          </div>
+        </section>
+
+        <section class="col-12 col-lg-4">
+          <div class="card shadow-sm h-100 topo-FINALIZADO">
+            <div class="card-header bg-body d-flex justify-content-between align-items-center">
+              <h2 class="h6 mb-0">Finalizados</h2>
+              <span class="badge text-bg-success rounded-pill" id="contador-FINALIZADO">0</span>
+            </div>
+            <div class="card-body coluna" id="coluna-FINALIZADO"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

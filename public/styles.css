@@ -1,0 +1,26 @@
+/* Só o que o Bootstrap não cobre. */
+.coluna {
+  max-height: calc(100vh - 330px);
+  min-height: 160px;
+  overflow-y: auto;
+}
+
+.pedido + .pedido {
+  margin-top: 0.75rem;
+}
+
+.pedido-id {
+  font-family: var(--bs-font-monospace);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 991.98px) {
+  .coluna {
+    max-height: none;
+  }
+}
+
+/* Faixa colorida só no topo de cada coluna */
+.topo-CRIADO { border-top: 4px solid var(--bs-secondary); }
+.topo-PAGO { border-top: 4px solid var(--bs-warning); }
+.topo-FINALIZADO { border-top: 4px solid var(--bs-success); }

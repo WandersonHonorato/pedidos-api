@@ -56,6 +56,23 @@ describe('Pedido (entidade de domínio)', () => {
     expect(() => novo({ status: STATUS.CANCELADO }).pagar()).toThrow(InvalidStateError);
   });
 
+  it('finalizar muda o status de PAGO (em preparação) para FINALIZADO', () => {
+    const pedido = novo();
+    pedido.pagar();
+    pedido.finalizar();
+    expect(pedido.status).toBe(STATUS.FINALIZADO);
+  });
+
+  it.each([
+    ['CRIADO (ainda não pago)', STATUS.CRIADO],
+    ['FINALIZADO (já finalizado)', STATUS.FINALIZADO],
+    ['CANCELADO', STATUS.CANCELADO],
+  ])('não permite finalizar pedido %s', (_caso, status) => {
+    const pedido = novo({ status });
+    expect(() => pedido.finalizar()).toThrow(InvalidStateError);
+    expect(pedido.status).toBe(status);
+  });
+
   it('serializa com total calculado e data em ISO 8601', () => {
     const criadoEm = new Date('2026-01-01T12:00:00.000Z');
     expect(novo({ criadoEm }).toJSON()).toEqual({

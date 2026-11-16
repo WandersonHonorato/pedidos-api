@@ -37,8 +37,23 @@ Nenhum número da documentação foi estimado: todos vêm de execução real (sa
 
    Achado: `GET /pedidos/abc` (id que não é UUID) devolvia **500** no Postgres, mas 404 no repositório em memória, uma violação de LSP entre as implementações. Corrigido e registrado no [ADR 0001](adr/0001-repository-pattern.md).
 
+5. **Painel web**
+   > "Aplicar um frontend básico com JS e Bootstrap, com uma tela mostrando os pedidos criados, em preparação e finalizados, mantendo a estrutura do backend e do projeto."
+
+   Decisões:
+   - o domínio ganhou só o necessário: status `FINALIZADO`, a transição `PAGO → FINALIZADO` e a listagem por status. "Em preparação" é o próprio `PAGO`, sem criar um status a mais;
+   - a tela fica em `public/`, servida pelo mesmo Express (sem framework, sem build, sem segundo deploy);
+   - dados da API são renderizados com `textContent`. Foi testado num navegador real com um cliente chamado `<img src=x onerror=alert(1)>`: nenhum script executou.
+
+   Achado durante a verificação: com centenas de pedidos pagos no banco, buscar "os 100 mais recentes" escondia pedidos antigos que ainda esperavam pagamento. Corrigido fazendo uma consulta por coluna (`GET /pedidos?status=...`).
+
+6. **Deploy**
+   > "Passo a passo para subir o projeto na Hostinger."
+
+   Resultado: [`deploy-hostinger.md`](deploy-hostinger.md), com duas opções (Node.js Web App + Neon, ou VPS com Docker), feito a partir da documentação oficial da Hostinger.
+
 ## O que foi revisado manualmente
 
-- Regras de domínio (centavos inteiros, ao menos 1 item, só paga se CRIADO)
+- Regras de domínio (centavos inteiros, ao menos 1 item, só paga se CRIADO, só finaliza se PAGO)
 - Que nenhum segredo está versionado (`git ls-files | grep .env` → só `.env.example`)
 - Que o workflow da CI corresponde aos comandos do README

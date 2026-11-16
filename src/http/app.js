@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { pinoHttp } from 'pino-http';
 import { ValidationError, NotFoundError, InvalidStateError } from '../domain/errors.js';
@@ -8,6 +9,9 @@ const STATUS_POR_ERRO = new Map([
   [InvalidStateError, 409],
 ]);
 
+/** Painel web (HTML + JS + Bootstrap), servido pelo próprio Express: sem build, mesmo deploy. */
+const PASTA_PUBLICA = fileURLToPath(new URL('../../public', import.meta.url));
+
 /**
  * Monta o app Express. Recebe as dependências prontas (service, logger,
  * métricas) — por isso o mesmo app roda no teste de integração com
@@ -17,6 +21,8 @@ export function criarApp({ pedidoService, logger, metricas }) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '100kb' }));
+  // Antes do logger e das métricas: arquivos estáticos não poluem logs nem o histograma do SLO
+  app.use(express.static(PASTA_PUBLICA));
   app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/metrics' } }));
 
   // Métrica de latência por rota (rota em template, ex: /pedidos/:id, para não explodir cardinalidade)
@@ -41,12 +47,20 @@ export function criarApp({ pedidoService, logger, metricas }) {
     res.status(201).location(`/pedidos/${pedido.id}`).json(pedido);
   });
 
+  app.get('/pedidos', async (req, res) => {
+    res.json(await pedidoService.listar({ status: req.query.status }));
+  });
+
   app.get('/pedidos/:id', async (req, res) => {
     res.json(await pedidoService.obter(req.params.id));
   });
 
   app.post('/pedidos/:id/pagamento', async (req, res) => {
     res.json(await pedidoService.pagar(req.params.id));
+  });
+
+  app.post('/pedidos/:id/finalizacao', async (req, res) => {
+    res.json(await pedidoService.finalizar(req.params.id));
   });
 
   app.use((_req, res) => res.status(404).json({ erro: 'rota não encontrada' }));

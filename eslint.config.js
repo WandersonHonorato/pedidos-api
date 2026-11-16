@@ -19,6 +19,11 @@ export default [
     },
   },
   {
+    // Painel web: roda no navegador
+    files: ['public/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
     // Script do k6 roda no runtime do k6, não no Node
     files: ['k6/**/*.js'],
     languageOptions: { globals: { __ENV: 'readonly', __VU: 'readonly' } },
