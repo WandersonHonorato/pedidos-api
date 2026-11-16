@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: install · lint · test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Lint OpenAPI (Spectral)
+        run: npm run lint:openapi
+
+      - name: Test + coverage (falha abaixo do mínimo declarado)
+        run: npm run test:coverage
+
+      - name: Publicar relatório de coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+
+  compose-smoke:
+    name: docker compose up + smoke k6 (p95)
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mesmo passo do README: o .env é gerado a partir do exemplo, nunca commitado
+      - name: Criar .env a partir do .env.example
+        run: cp .env.example .env
+
+      - name: Subir stack (1 comando)
+        run: docker compose up -d --build --wait
+
+      - uses: grafana/setup-k6-action@v1
+
+      - name: Smoke test k6 (thresholds = SLO)
+        run: k6 run --summary-export=k6-summary.json k6/smoke.js
+
+      - name: p95 no resumo da execução
+        if: always()
+        run: |
+          node -e '
+            const s = require("./k6-summary.json").metrics;
+            const d = s["http_req_duration{endpoint:criar_pedido}"];
+            const f = s.http_req_failed;
+            const lines = [
+              "### Smoke k6 — POST /pedidos",
+              "| métrica | valor |", "|---|---|",
+              `| p95 | ${d["p(95)"].toFixed(2)} ms |`,
+              `| p99 | ${d["p(99)"].toFixed(2)} ms |`,
+              `| mediana | ${d.med.toFixed(2)} ms |`,
+              `| taxa de erro | ${(f.value * 100).toFixed(2)} % |`,
+              `| SLO (p95 < 300 ms) | ${d["p(95)"] < 300 ? "✅ atendido" : "❌ violado"} |`,
+            ];
+            console.log(lines.join("\n"));
+          ' >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-summary
+          path: k6-summary.json
+
+      - name: Logs da stack (em caso de falha)
+        if: failure()
+        run: docker compose logs
+
+      - name: Derrubar stack
+        if: always()
+        run: docker compose down -v
