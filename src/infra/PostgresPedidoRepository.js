@@ -1,10 +1,11 @@
 import { Pedido } from '../domain/Pedido.js';
 
+const SELECT = 'SELECT id, cliente, itens, status, criado_em FROM pedidos';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Implementação do Repository em PostgreSQL. Mesmo contrato do
- * InMemoryPedidoRepository (salvar / buscarPorId), então o PedidoService
+ * InMemoryPedidoRepository (salvar / buscarPorId / listar), então o PedidoService
  * funciona com qualquer um dos dois sem alteração (OCP + LSP).
  *
  * Itens ficam em JSONB: o domínio não exige consulta por item, e isso
@@ -24,6 +25,8 @@ export class PostgresPedidoRepository {
         status      TEXT        NOT NULL,
         criado_em   TIMESTAMPTZ NOT NULL
       )`);
+    // Índice para a listagem do painel (filtro por status, ordenada por data)
+    await this.pool.query('CREATE INDEX IF NOT EXISTS pedidos_status_criado_em_idx ON pedidos (status, criado_em DESC)');
   }
 
   async salvar(pedido) {
@@ -38,12 +41,19 @@ export class PostgresPedidoRepository {
   async buscarPorId(id) {
     // id fora do formato UUID não existe — evita erro de cast do Postgres (que viraria 500)
     if (!UUID_RE.test(id)) return null;
-    const { rows } = await this.pool.query(
-      'SELECT id, cliente, itens, status, criado_em FROM pedidos WHERE id = $1',
-      [id],
-    );
-    if (rows.length === 0) return null;
-    const r = rows[0];
+    const { rows } = await this.pool.query(`${SELECT} WHERE id = $1`, [id]);
+    return rows.length === 0 ? null : PostgresPedidoRepository.#hidratar(rows[0]);
+  }
+
+  /** Mais recentes primeiro, filtro opcional por status, com limite. */
+  async listar({ status, limite }) {
+    const { rows } = status === undefined
+      ? await this.pool.query(`${SELECT} ORDER BY criado_em DESC LIMIT $1`, [limite])
+      : await this.pool.query(`${SELECT} WHERE status = $1 ORDER BY criado_em DESC LIMIT $2`, [status, limite]);
+    return rows.map(PostgresPedidoRepository.#hidratar);
+  }
+
+  static #hidratar(r) {
     return new Pedido({
       id: r.id,
       cliente: r.cliente,
