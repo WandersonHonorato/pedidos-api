@@ -5,6 +5,8 @@ info:
   description: |
     API de domínio único (pedidos). Fluxo principal: **criar → consultar → pagar**.
     Endpoint principal: `POST /pedidos`.
+    Ciclo de vida: CRIADO → PAGO (em preparação) → FINALIZADO.
+    O painel web (`GET /`) consome `GET /pedidos?status=...` para montar as 3 colunas.
     Valores monetários são inteiros em centavos (evita erro de ponto flutuante).
   contact:
     name: Lucas
@@ -71,6 +73,30 @@ paths:
           $ref: '#/components/responses/Erro400'
         '500':
           $ref: '#/components/responses/Erro500'
+    get:
+      tags: [pedidos]
+      operationId: listarPedidos
+      summary: Lista pedidos (mais recentes primeiro)
+      description: Retorna até 100 pedidos, opcionalmente filtrados por status. Usado pelo painel web.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra pelo status do pedido
+          schema:
+            $ref: '#/components/schemas/Status'
+      responses:
+        '200':
+          description: Lista de pedidos
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: '#/components/schemas/Pedido'
+        '400':
+          $ref: '#/components/responses/Erro400'
   /pedidos/{id}:
     get:
       tags: [pedidos]
@@ -107,6 +133,29 @@ paths:
           $ref: '#/components/responses/Erro404'
         '409':
           description: Pedido não está em status que permite pagamento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+  /pedidos/{id}/finalizacao:
+    post:
+      tags: [pedidos]
+      operationId: finalizarPedido
+      summary: Finaliza um pedido (PAGO → FINALIZADO)
+      description: Só pedidos em preparação (status PAGO) podem ser finalizados; caso contrário retorna 409.
+      parameters:
+        - $ref: '#/components/parameters/PedidoId'
+      responses:
+        '200':
+          description: Pedido finalizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+        '404':
+          $ref: '#/components/responses/Erro404'
+        '409':
+          description: Pedido não está em status que permite finalização
           content:
             application/json:
               schema:
@@ -197,11 +246,14 @@ components:
           type: integer
           example: 28900
         status:
-          type: string
-          enum: [CRIADO, PAGO, CANCELADO]
+          $ref: '#/components/schemas/Status'
         criadoEm:
           type: string
           format: date-time
+    Status:
+      type: string
+      description: CRIADO = aguardando pagamento; PAGO = em preparação; FINALIZADO = concluído.
+      enum: [CRIADO, PAGO, FINALIZADO, CANCELADO]
     Erro:
       type: object
       required: [erro]

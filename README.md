@@ -3,7 +3,8 @@
 [![CI](https://github.com/WandersonHonorato/pedidos-api/actions/workflows/ci.yml/badge.svg)](https://github.com/WandersonHonorato/pedidos-api/actions/workflows/ci.yml)
 
 API de **domínio único (pedidos)** com **um fluxo principal ponta a ponta**:
-**criar pedido → consultar → pagar**. Node.js 22 + Express 5 + PostgreSQL 16.
+**criar pedido → consultar → pagar → finalizar**, e um **painel web** (JS puro + Bootstrap) que mostra os
+pedidos em três colunas: **criados**, **em preparação** e **finalizados**. Node.js 22 + Express 5 + PostgreSQL 16.
 
 ## Nível
 
@@ -42,7 +43,9 @@ No Windows (PowerShell): `Copy-Item .env.example .env; docker compose up --build
 O `.env` é criado a partir do exemplo e **não vai para o Git**. Se ele faltar, o compose para com a mensagem
 `defina POSTGRES_USER no .env (cp .env.example .env)`.
 
-A API fica disponível em `http://localhost:3000` (porta configurável por `API_PORT` no `.env`).
+- **Painel web:** http://localhost:3000
+- **API:** http://localhost:3000/pedidos (porta configurável por `API_PORT` no `.env`)
+
 Para subir em segundo plano e esperar ficar saudável: `docker compose up -d --build --wait`.
 
 ### Testar o fluxo principal na mão
@@ -55,15 +58,24 @@ curl -s -X POST localhost:3000/pedidos -H 'Content-Type: application/json' \
 # 2) consultar (troque <ID> pelo id retornado)
 curl -s localhost:3000/pedidos/<ID>
 
-# 3) pagar  -> status PAGO   (pagar de novo -> 409)
+# 3) pagar  -> status PAGO, ou seja, "em preparação"   (pagar de novo -> 409)
 curl -s -X POST localhost:3000/pedidos/<ID>/pagamento
+
+# 4) finalizar  -> status FINALIZADO   (finalizar sem pagar -> 409)
+curl -s -X POST localhost:3000/pedidos/<ID>/finalizacao
+
+# 5) listar (opcional: ?status=CRIADO | PAGO | FINALIZADO)
+curl -s "localhost:3000/pedidos?status=PAGO"
 ```
 
 | Método | Rota | Descrição |
 |---|---|---|
+| GET | `/` | painel web (HTML + JS + Bootstrap) |
 | POST | `/pedidos` | cria pedido (total calculado no servidor) → 201 |
+| GET | `/pedidos?status=` | lista até 100, mais recentes primeiro → 200 / 400 |
 | GET | `/pedidos/{id}` | consulta → 200 / 404 |
-| POST | `/pedidos/{id}/pagamento` | paga (CRIADO → PAGO) → 200 / 404 / 409 |
+| POST | `/pedidos/{id}/pagamento` | paga (CRIADO → PAGO, "em preparação") → 200 / 404 / 409 |
+| POST | `/pedidos/{id}/finalizacao` | finaliza (PAGO → FINALIZADO) → 200 / 404 / 409 |
 | GET | `/health` | liveness |
 | GET | `/metrics` | métricas Prometheus |
 
@@ -95,7 +107,7 @@ npm run test:smoke        # k6 contra a API rodando (BASE_URL=... para outro hos
 ```
 
 - **Unitários** (`tests/unit/`): entidade `Pedido` (regras de validação, cálculo de total, transição de status), `PedidoService` e `config`.
-- **Integração** (`tests/integration/pedidos.api.test.js`): Supertest faz requisições HTTP reais no app Express, passando por service, domínio e repositório. Cobre o fluxo **criar → consultar → pagar → pagar de novo (409)** e os casos 400/404/500, além do `/metrics`.
+- **Integração** (`tests/integration/pedidos.api.test.js`): Supertest faz requisições HTTP reais no app Express, passando por service, domínio e repositório. Cobre o fluxo **criar → consultar → pagar → finalizar**, a listagem por status que alimenta as 3 colunas do painel, os casos 400/404/409/500, o `/metrics` e se o painel (`GET /`) é servido.
 - Todo teste tem asserção explícita (`expect`) do status **e** do corpo.
 
 ### Coverage mínimo declarado
@@ -125,9 +137,10 @@ Link da última execução verde: **https://github.com/WandersonHonorato/pedidos
 ## Arquitetura
 
 ```
+public/               Painel web: index.html, app.js, styles.css (servido pelo Express, sem build)
 src/
 ├─ domain/            Pedido (entidade + regras) e erros de domínio — sem dependências externas
-├─ application/       PedidoService (casos de uso: criar, obter, pagar)
+├─ application/       PedidoService (casos de uso: criar, obter, listar, pagar, finalizar)
 ├─ infra/             Repositórios: InMemory (testes / modo dev) e Postgres (compose)
 ├─ http/              App Express: rotas, tradução erro de domínio → status HTTP, métricas
 ├─ observability/     logger (pino) e métricas (prom-client)
@@ -139,7 +152,7 @@ Dependências apontam para dentro: `http → application → domain ← infra`.
 
 ### Pattern: Repository
 
-`PedidoService` depende de um contrato `{ salvar, buscarPorId }`, e não do Postgres.
+`PedidoService` depende de um contrato `{ salvar, buscarPorId, listar }`, e não do Postgres.
 Por isso o **mesmo** app roda no teste de integração (memória) e no compose (Postgres) sem mudar uma linha.
 Justificativa completa, com alternativas descartadas: [ADR 0001](docs/adr/0001-repository-pattern.md).
 
@@ -150,8 +163,33 @@ Justificativa completa, com alternativas descartadas: [ADR 0001](docs/adr/0001-r
 | **S**: responsabilidade única | `Pedido` só tem regras; `PedidoService` só orquestra; `app.js` só traduz HTTP; repositórios só persistem; `config.js` só lê ambiente. |
 | **O**: aberto/fechado | Trocar ou adicionar persistência = nova classe de repositório; `PedidoService` não muda. O hook `onPedidoCriado` permite reagir à criação (hoje: log de negócio) sem editar o service. |
 | **L**: substituição de Liskov | `InMemoryPedidoRepository` e `PostgresPedidoRepository` são intercambiáveis: ambos devolvem cópias (o InMemory serializa, como um banco faria) e `null` para id inexistente. |
-| **I**: segregação de interface | O contrato de repositório tem só os 2 métodos que o fluxo usa. Sem `findAll`, `delete` etc. "por via das dúvidas". |
+| **I**: segregação de interface | O contrato de repositório tem só os 3 métodos que os casos de uso usam (`salvar`, `buscarPorId`, `listar`). Sem `delete`, `update` genérico etc. "por via das dúvidas". |
 | **D**: inversão de dependência | `PedidoService` recebe o repositório pelo construtor; `criarApp` recebe service/logger/métricas prontos. Só `server.js` conhece classes concretas. |
+
+## Painel web
+
+Tela única em [`public/`](public), servida pelo próprio Express em `GET /`. Usa JavaScript puro e Bootstrap 5
+(via CDN, com hash de integridade SRI), sem framework e sem etapa de build: o mesmo container e o mesmo deploy
+servem API e tela.
+
+| Coluna | Status na API | Ação no card |
+|---|---|---|
+| **Criados** (aguardando pagamento) | `CRIADO` | *Confirmar pagamento* → `POST /pedidos/{id}/pagamento` |
+| **Em preparação** | `PAGO` | *Finalizar* → `POST /pedidos/{id}/finalizacao` |
+| **Finalizados** | `FINALIZADO` | — |
+
+- Um formulário no topo cria pedidos (`POST /pedidos`). O preço é digitado em reais e enviado em centavos.
+- Cada coluna é uma consulta `GET /pedidos?status=...` (até 100 por coluna; acima disso o contador mostra `100+`).
+- A tela se atualiza sozinha a cada 5 s.
+- Dados vindos da API são inseridos com `textContent`, nunca com `innerHTML`, o que bloqueia XSS. Isso foi testado com um cliente chamado `<img src=x onerror=alert(1)>`.
+- Os arquivos estáticos são servidos **antes** do logger e das métricas, então não poluem os logs nem o histograma do SLO.
+
+**Por que não um framework (React/Vue)?** O enunciado pede escopo enxuto. Uma tela de 3 colunas não justifica
+uma segunda aplicação, um build e um segundo deploy.
+
+## Deploy
+
+Passo a passo para publicar na Hostinger: [`docs/deploy-hostinger.md`](docs/deploy-hostinger.md).
 
 ## Observabilidade
 
@@ -205,4 +243,5 @@ Nenhum segredo tem valor padrão no código nem no compose.
 - [`docs/openapi.yaml`](docs/openapi.yaml): contrato OpenAPI 3
 - [`docs/desempenho.md`](docs/desempenho.md): smoke k6 e p95 medido
 - [`docs/ia.md`](docs/ia.md): uso de IA e prompts relevantes
+- [`docs/deploy-hostinger.md`](docs/deploy-hostinger.md): publicação na Hostinger
 - [`CONTRIBUTORS.md`](CONTRIBUTORS.md)
