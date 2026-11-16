@@ -1,6 +1,6 @@
-# Pedidos API — Projeto B (Full Cycle)
+# Pedidos API — Projeto B (Full Cycle Geração Tech 4.0)
 
-[![CI](https://github.com/SEU_USUARIO/pedidos-api/actions/workflows/ci.yml/badge.svg)](https://github.com/SEU_USUARIO/pedidos-api/actions/workflows/ci.yml)
+[![CI](https://github.com/WandersonHonorato/pedidos-api/actions/workflows/ci.yml/badge.svg)](https://github.com/WandersonHonorato/pedidos-api/actions/workflows/ci.yml)
 
 API de **domínio único (pedidos)** com **um fluxo principal ponta a ponta**:
 **criar pedido → consultar → pagar**. Node.js 22 + Express 5 + PostgreSQL 16.
@@ -118,7 +118,7 @@ pelo job `compose-smoke` da CI, que sobe o compose com Postgres e roda o k6 cont
 1. **quality**: `npm ci` → `npm run lint` → `npm run lint:openapi` → `npm run test:coverage`
 2. **compose-smoke**: `cp .env.example .env` → `docker compose up -d --build --wait` → `k6 run` (thresholds = SLO) → p95 publicado no *Job Summary*
 
-Link da última execução verde: **COLE_AQUI_O_LINK_DO_RUN**
+Link da última execução verde: **https://github.com/WandersonHonorato/pedidos-api/actions/runs/43805878882**
 
 ## Arquitetura
 

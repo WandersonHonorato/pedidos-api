@@ -69,10 +69,10 @@ e publica p95, p99, mediana e taxa de erro no **Job Summary** da execução, al�
 
 | Métrica (`POST /pedidos`) | Valor |
 |---|---|
-| p95 | _preencher com o valor do Job Summary_ |
-| Link da execução | _COLE_AQUI_O_LINK_DO_RUN_ |
+| p95 | 4.42 ms |
+| Link da execução | https://github.com/WandersonHonorato/pedidos-api/actions/runs/43805878882 |
 
-## Conclusão
+## Conclusãogit add .
 
 - **SLO atendido** com folga de ~54×: p95 = 5,53 ms contra meta de 300 ms, e 0 % de erro.
 - O p99 (15 ms) e o máximo (28 ms) mostram cauda curta; os picos coincidem com o *warm-up* do pool de conexões do Postgres.

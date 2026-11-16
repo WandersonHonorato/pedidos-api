@@ -2,7 +2,7 @@
 
 | Nome | Papel | Contato |
 |---|---|---|
-| Lucas | Autor: domínio, API, testes, infraestrutura, CI e documentação | [GitHub](https://github.com/SEU_USUARIO) |
+| Wanderson Honorato Araujo | Autor: domínio, API, testes, infraestrutura, CI e documentação | [GitHub](https://github.com/WandersonHonorato) |
 
 ## Assistência de IA
 
