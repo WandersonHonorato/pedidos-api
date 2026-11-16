@@ -47,6 +47,36 @@ describe('API /pedidos — fluxo principal ponta a ponta', () => {
     expect(segundoPagamento.body.erro).toMatch(/não pode ser pago/);
   });
 
+  it('fluxo completo do painel: pagar → finalizar, e a listagem reflete cada coluna', async () => {
+    const { body: p1 } = await request(app).post('/pedidos').send(corpo).expect(201);
+    const { body: p2 } = await request(app).post('/pedidos').send({ ...corpo, cliente: 'Diego' }).expect(201);
+    const { body: p3 } = await request(app).post('/pedidos').send({ ...corpo, cliente: 'Eva' }).expect(201);
+
+    await request(app).post(`/pedidos/${p2.id}/pagamento`).expect(200);
+    await request(app).post(`/pedidos/${p3.id}/pagamento`).expect(200);
+    const finalizado = await request(app).post(`/pedidos/${p3.id}/finalizacao`).expect(200);
+    expect(finalizado.body.status).toBe('FINALIZADO');
+
+    const todos = await request(app).get('/pedidos').expect(200);
+    expect(todos.body).toHaveLength(3);
+
+    const ids = async (status) => (await request(app).get(`/pedidos?status=${status}`).expect(200)).body.map((p) => p.id);
+    expect(await ids('CRIADO')).toEqual([p1.id]);
+    expect(await ids('PAGO')).toEqual([p2.id]);
+    expect(await ids('FINALIZADO')).toEqual([p3.id]);
+  });
+
+  it('409 ao finalizar pedido que não foi pago', async () => {
+    const { body } = await request(app).post('/pedidos').send(corpo).expect(201);
+    const res = await request(app).post(`/pedidos/${body.id}/finalizacao`).expect(409);
+    expect(res.body.erro).toMatch(/não pode ser finalizado/);
+  });
+
+  it('400 ao listar com status inválido', async () => {
+    const res = await request(app).get('/pedidos?status=XPTO').expect(400);
+    expect(res.body.erro).toBe('status inválido: XPTO');
+  });
+
   it('400 para pedido inválido', async () => {
     const res = await request(app).post('/pedidos').send({ cliente: 'Carla', itens: [] }).expect(400);
     expect(res.body.erro).toBe('pedido precisa ter ao menos 1 item');

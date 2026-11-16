@@ -41,12 +41,20 @@ export function criarApp({ pedidoService, logger, metricas }) {
     res.status(201).location(`/pedidos/${pedido.id}`).json(pedido);
   });
 
+  app.get('/pedidos', async (req, res) => {
+    res.json(await pedidoService.listar({ status: req.query.status }));
+  });
+
   app.get('/pedidos/:id', async (req, res) => {
     res.json(await pedidoService.obter(req.params.id));
   });
 
   app.post('/pedidos/:id/pagamento', async (req, res) => {
     res.json(await pedidoService.pagar(req.params.id));
+  });
+
+  app.post('/pedidos/:id/finalizacao', async (req, res) => {
+    res.json(await pedidoService.finalizar(req.params.id));
   });
 
   app.use((_req, res) => res.status(404).json({ erro: 'rota não encontrada' }));
