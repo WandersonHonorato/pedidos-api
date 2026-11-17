@@ -6,6 +6,8 @@ API de **domínio único (pedidos)** com **um fluxo principal ponta a ponta**:
 **criar pedido → consultar → pagar → finalizar**, e um **painel web** (JS puro + Bootstrap) que mostra os
 pedidos em três colunas: **criados**, **em preparação** e **finalizados**. Node.js 22 + Express 5 + PostgreSQL 16.
 
+## 🌐 Deploy: https://pedidos-api-kappa.vercel.app/
+
 ## Nível
 
 **M4 — todos os entregáveis de M1 a M4 atendidos.**
