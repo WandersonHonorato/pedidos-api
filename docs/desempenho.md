@@ -78,6 +78,9 @@ e publica p95, p99, mediana e taxa de erro no **Job Summary** da execução, al�
 
 ## Conclusão
 
+| CI #8 p95 (com painel web) | 4.25 ms |
+| Link da execução | https://github.com/WandersonHonorato/pedidos-api/actions/runs/43991515871 |
+
 - **SLO atendido** com folga de ~54×: p95 = 5,53 ms contra meta de 300 ms, e 0 % de erro.
 - O p99 (15 ms) e o máximo (28 ms) mostram cauda curta; os picos coincidem com o *warm-up* do pool de conexões do Postgres.
 - **Limites desta medição:** é um *smoke test* (carga leve, k6 e banco na mesma máquina, sem latência de rede). Ele prova que o fluxo funciona e dá uma linha de base; **não** é teste de capacidade. Para dimensionar seria preciso um teste de carga/estresse com rampa de VUs em ambiente separado.
